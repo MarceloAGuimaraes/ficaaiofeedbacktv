@@ -1,0 +1,4 @@
+<resources>
+
+    <style name="Theme.FicaAiOFeedback" parent="Theme.AppCompat.DayNight.NoActionBar" />
+</resources>
