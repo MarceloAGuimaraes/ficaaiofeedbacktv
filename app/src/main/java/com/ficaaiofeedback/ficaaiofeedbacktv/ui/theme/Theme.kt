@@ -15,15 +15,16 @@ fun FicaAiOFeedbackTheme(
 ) {
     val colorScheme = if (isInDarkTheme) {
         darkColorScheme(
-            primary = Purple80,
+            primary = BrandPurple,
             secondary = PurpleGrey80,
             tertiary = Pink80
         )
     } else {
         lightColorScheme(
-            primary = Purple40,
+            primary = BrandPurple,
             secondary = PurpleGrey40,
-            tertiary = Pink40
+            tertiary = Pink40,
+            background = BrandPurpleLight
         )
     }
     MaterialTheme(
