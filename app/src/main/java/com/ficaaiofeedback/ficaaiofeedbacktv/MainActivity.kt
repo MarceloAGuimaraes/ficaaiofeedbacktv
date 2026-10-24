@@ -56,7 +56,7 @@ private fun FicaAiOFeedbackApp() {
     val series = selectedSeries
     val episode = selectedEpisode
     when {
-        episode != null -> VideoPlayerScreen(episode = episode)
+        series != null && episode != null -> VideoPlayerScreen(series = series, episode = episode)
         series != null -> SeriesSeasonScreen(series = series, onEpisodeClick = { selectedEpisode = it })
         else -> SeriesListScreen(onSeriesClick = { selectedSeries = it })
     }

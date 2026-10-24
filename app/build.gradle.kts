@@ -16,10 +16,12 @@ android {
         versionCode = 1
         versionName = "1.0"
 
+        buildConfigField("String", "API_BASE_URL", "\"http://localhost:8000\"")
     }
 
     buildTypes {
         release {
+            buildConfigField("String", "API_BASE_URL", "\"https://ficaaiofeedback.com.br\"")
             optimization {
                 enable = true
                 packageScope = setOf("androidx.**", "kotlin.**", "kotlinx.**")
@@ -32,6 +34,7 @@ android {
     }
     buildFeatures {
         compose = true
+        buildConfig = true
     }
 }
 
