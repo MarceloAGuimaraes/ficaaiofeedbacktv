@@ -102,6 +102,8 @@ private class PlayerLogger : Player.Listener {
 
     override fun onPlayerError(error: PlaybackException) {
         Log.e("VideoPlayerScreen", "Playback error ${error.errorCodeName}: ${error.message}", error)
+        // URLs carry access tokens, so request details are only logged in debug builds.
+        if (!BuildConfig.DEBUG) return
         when (val cause = error.cause) {
             is HttpDataSource.InvalidResponseCodeException -> Log.e(
                 "VideoPlayerScreen",
