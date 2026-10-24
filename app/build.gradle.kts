@@ -46,7 +46,6 @@ android {
             buildConfigField("String", "API_BASE_URL", "\"https://ficaaiofeedback.com.br\"")
             optimization {
                 enable = true
-                packageScope = setOf("androidx.**", "kotlin.**", "kotlinx.**")
             }
         }
     }
