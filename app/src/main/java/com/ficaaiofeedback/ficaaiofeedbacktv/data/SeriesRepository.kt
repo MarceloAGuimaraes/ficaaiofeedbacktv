@@ -24,6 +24,7 @@ class RemoteSeriesRepository(
         try {
             connection.connectTimeout = 10_000
             connection.readTimeout = 10_000
+            connection.setRequestProperty("api-key", BuildConfig.API_KEY)
             if (connection.responseCode != HttpURLConnection.HTTP_OK) {
                 throw IOException("GET $url failed with HTTP ${connection.responseCode}")
             }

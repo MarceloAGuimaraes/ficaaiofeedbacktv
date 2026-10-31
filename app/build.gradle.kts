@@ -37,6 +37,10 @@ android {
         versionName = "1.0"
 
         buildConfigField("String", "API_BASE_URL", "\"http://localhost:8000\"")
+        // Placeholder until the real key is set as ficaaiofeedback.apiKey in local.properties.
+        val apiKey = localProperties.getProperty("ficaaiofeedback.apiKey")?.trim()?.removeSurrounding("\"")
+            ?: "changeme"
+        buildConfigField("String", "API_KEY", "\"$apiKey\"")
     }
 
     buildTypes {

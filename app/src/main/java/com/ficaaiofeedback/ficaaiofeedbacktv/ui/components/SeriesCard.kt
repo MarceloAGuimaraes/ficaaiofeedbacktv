@@ -2,6 +2,7 @@ package com.ficaaiofeedback.ficaaiofeedbacktv.ui.components
 
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
+import androidx.compose.foundation.gestures.detectTapGestures
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.interaction.collectIsFocusedAsState
 import androidx.compose.foundation.layout.Box
@@ -14,12 +15,14 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.focus.onFocusChanged
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
@@ -45,11 +48,14 @@ fun SeriesCard(
 ) {
     val interactionSource = remember { MutableInteractionSource() }
     val isFocused by interactionSource.collectIsFocusedAsState()
+    val currentOnClick by rememberUpdatedState(onClick)
 
     Card(
         onClick = { onClick(series) },
         interactionSource = interactionSource,
         modifier = modifier
+            // TV Material's Card only reacts to D-pad Enter; this lets touch devices tap it too.
+            .pointerInput(series) { detectTapGestures { currentOnClick(series) } }
             .size(width = 240.dp, height = 340.dp)
             .alpha(if (notFocused) 0.5f else 1f)
             .onFocusChanged { if (it.isFocused) onFocusChanged(series.id) },
