@@ -56,7 +56,7 @@ fun SeriesCard(
         modifier = modifier
             // TV Material's Card only reacts to D-pad Enter; this lets touch devices tap it too.
             .pointerInput(series) { detectTapGestures { currentOnClick(series) } }
-            .size(width = 240.dp, height = 340.dp)
+            .size(width = 160.dp, height = 226.dp)
             .alpha(if (notFocused) 0.5f else 1f)
             .onFocusChanged { if (it.isFocused) onFocusChanged(series.id) },
         border = CardDefaults.border(
@@ -90,26 +90,26 @@ private fun BoxScope.CompactCardOverlay(series: Series) {
             .background(
                 Brush.verticalGradient(
                     colors = listOf(Color.Transparent, Color.Black.copy(alpha = 0.9f)),
-                    startY = 100f,
+                    startY = 65f,
                 )
             )
     )
     Column(
         modifier = Modifier
             .align(Alignment.BottomCenter)
-            .padding(12.dp, bottom = 20.dp)
+            .padding(6.dp, bottom = 10.dp)
     ) {
         Text(
             text = series.title,
             color = Color.White,
             fontWeight = FontWeight.Bold,
-            fontSize = 18.sp,
+            fontSize = 14.sp,
         )
         Text(
             text = "Season ${series.season}",
             color = Color.White,
             fontWeight = FontWeight.SemiBold,
-            fontSize = 14.sp,
+            fontSize = 11.sp,
         )
     }
 }
@@ -126,24 +126,24 @@ private fun BoxScope.FocusedCardOverlay(series: Series) {
         modifier = Modifier
             .align(Alignment.Center)
             .fillMaxWidth()
-            .padding(horizontal = 18.dp)
+            .padding(horizontal = 8.dp)
     ) {
         Text(
             text = series.title,
             color = Color.White,
             fontWeight = FontWeight.Bold,
-            fontSize = 20.sp,
+            fontSize = 15.sp,
             lineHeight = 24.sp,
             textAlign = TextAlign.Center,
         )
         Text(
             text = series.description,
             color = Color.White.copy(alpha = 0.9f),
-            fontSize = 13.sp,
+            fontSize = 11.sp,
             lineHeight = 18.sp,
             textAlign = TextAlign.Center,
-            maxLines = 6,
-            modifier = Modifier.padding(top = 10.dp),
+            maxLines = 5,
+            modifier = Modifier.padding(top = 8.dp),
         )
     }
 }

@@ -3,6 +3,7 @@ package com.ficaaiofeedback.ficaaiofeedbacktv.data
 import com.ficaaiofeedback.ficaaiofeedbacktv.BuildConfig
 import com.ficaaiofeedback.ficaaiofeedbacktv.model.Episode
 import com.ficaaiofeedback.ficaaiofeedbacktv.model.Series
+import com.ficaaiofeedback.ficaaiofeedbacktv.model.SeriesCatalog
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import org.json.JSONArray
@@ -13,13 +14,13 @@ import java.net.HttpURLConnection
 import java.net.URL
 
 interface SeriesRepository {
-    suspend fun getSeries(): List<Series>
+    suspend fun getSeries(): SeriesCatalog
 }
 
 class RemoteSeriesRepository(
     private val url: String = "${BuildConfig.API_BASE_URL}/series/seasons",
 ) : SeriesRepository {
-    override suspend fun getSeries(): List<Series> = withContext(Dispatchers.IO) {
+    override suspend fun getSeries(): SeriesCatalog = withContext(Dispatchers.IO) {
         val connection = URL(url).openConnection() as HttpURLConnection
         try {
             connection.connectTimeout = 10_000
@@ -30,7 +31,11 @@ class RemoteSeriesRepository(
             }
             val body = connection.inputStream.bufferedReader().use { it.readText() }
             try {
-                JSONArray(body).map { it.toSeries() }
+                val catalog = JSONObject(body)
+                SeriesCatalog(
+                    watching = catalog.getJSONArray("watching").map { it.toSeries() },
+                    toWatch = catalog.getJSONArray("to_watch").map { it.toSeries() },
+                )
             } catch (e: JSONException) {
                 throw IOException("Invalid series payload from $url", e)
             }
@@ -55,5 +60,5 @@ private fun JSONObject.toEpisode() = Episode(
     title = getString("name"),
 )
 
-private fun <T> JSONArray.map(transform: (JSONObject) -> T): List<T> =
+internal fun <T> JSONArray.map(transform: (JSONObject) -> T): List<T> =
     (0 until length()).map { transform(getJSONObject(it)) }
