@@ -1,6 +1,5 @@
 package com.ficaaiofeedback.ficaaiofeedbacktv.ui.screens
 
-import androidx.compose.foundation.gestures.detectTapGestures
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
@@ -15,11 +14,8 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
@@ -31,6 +27,7 @@ import androidx.tv.material3.Text
 import coil.compose.AsyncImage
 import com.ficaaiofeedback.ficaaiofeedbacktv.model.Episode
 import com.ficaaiofeedback.ficaaiofeedbacktv.model.Series
+import com.ficaaiofeedback.ficaaiofeedbacktv.ui.components.tapToClick
 
 @OptIn(ExperimentalTvMaterial3Api::class)
 @Composable
@@ -85,13 +82,11 @@ fun SeriesSeasonScreen(
 @OptIn(ExperimentalTvMaterial3Api::class)
 @Composable
 private fun EpisodeButton(episode: Episode, onClick: (Episode) -> Unit) {
-    val currentOnClick by rememberUpdatedState(onClick)
     Button(
         onClick = { onClick(episode) },
         modifier = Modifier
             .fillMaxWidth()
-            // TV Material's Button only reacts to D-pad Enter; this lets touch devices tap it too.
-            .pointerInput(episode) { detectTapGestures { currentOnClick(episode) } },
+            .tapToClick { onClick(episode) },
         colors = ButtonDefaults.colors(
             containerColor = Color(0xFF1C1C1C),
             contentColor = Color.White,

@@ -17,7 +17,9 @@ import androidx.tv.material3.ExperimentalTvMaterial3Api
 import androidx.tv.material3.Surface
 import androidx.tv.material3.SurfaceDefaults
 import com.ficaaiofeedback.ficaaiofeedbacktv.model.Episode
+import com.ficaaiofeedback.ficaaiofeedbacktv.model.PlaybackServer
 import com.ficaaiofeedback.ficaaiofeedbacktv.model.Series
+import com.ficaaiofeedback.ficaaiofeedbacktv.ui.components.ServerPickerDialog
 import com.ficaaiofeedback.ficaaiofeedbacktv.ui.screens.SeriesListScreen
 import com.ficaaiofeedback.ficaaiofeedbacktv.ui.screens.SeriesSeasonScreen
 import com.ficaaiofeedback.ficaaiofeedbacktv.ui.screens.VideoPlayerScreen
@@ -49,6 +51,9 @@ class MainActivity : ComponentActivity() {
 private fun FicaAiOFeedbackApp() {
     var selectedSeries by remember { mutableStateOf<Series?>(null) }
     var selectedEpisode by remember { mutableStateOf<Episode?>(null) }
+    var selectedServer by remember { mutableStateOf(PlaybackServer.SERVER_1) }
+    // The episode whose server is being chosen; the player opens once one is picked.
+    var episodeAwaitingServer by remember { mutableStateOf<Episode?>(null) }
 
     BackHandler(enabled = selectedEpisode != null) { selectedEpisode = null }
     BackHandler(enabled = selectedEpisode == null && selectedSeries != null) { selectedSeries = null }
@@ -56,8 +61,21 @@ private fun FicaAiOFeedbackApp() {
     val series = selectedSeries
     val episode = selectedEpisode
     when {
-        series != null && episode != null -> VideoPlayerScreen(series = series, episode = episode)
-        series != null -> SeriesSeasonScreen(series = series, onEpisodeClick = { selectedEpisode = it })
+        series != null && episode != null ->
+            VideoPlayerScreen(series = series, episode = episode, initialServer = selectedServer)
+        series != null -> {
+            SeriesSeasonScreen(series = series, onEpisodeClick = { episodeAwaitingServer = it })
+            episodeAwaitingServer?.let { pending ->
+                ServerPickerDialog(
+                    onSelect = { server ->
+                        selectedServer = server
+                        selectedEpisode = pending
+                        episodeAwaitingServer = null
+                    },
+                    onDismiss = { episodeAwaitingServer = null },
+                )
+            }
+        }
         else -> SeriesListScreen(onSeriesClick = { selectedSeries = it })
     }
 }
