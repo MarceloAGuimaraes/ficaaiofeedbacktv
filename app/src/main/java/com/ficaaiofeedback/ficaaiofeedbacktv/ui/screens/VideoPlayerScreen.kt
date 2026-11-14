@@ -2,6 +2,7 @@ package com.ficaaiofeedback.ficaaiofeedbacktv.ui.screens
 
 import android.net.Uri
 import android.util.Log
+import android.util.Pair
 import androidx.annotation.OptIn
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
@@ -20,6 +21,9 @@ import androidx.compose.ui.viewinterop.AndroidView
 import androidx.media3.common.C
 import androidx.media3.common.MediaItem
 import androidx.media3.common.MimeTypes
+import androidx.media3.common.PlaybackException
+import androidx.media3.common.Player
+import androidx.media3.common.ErrorMessageProvider
 import androidx.media3.common.util.UnstableApi
 import androidx.media3.datasource.DataSource
 import androidx.media3.datasource.DefaultHttpDataSource
@@ -37,6 +41,7 @@ import com.ficaaiofeedback.ficaaiofeedbacktv.model.PlaybackServer
 import com.ficaaiofeedback.ficaaiofeedbacktv.model.Series
 import com.ficaaiofeedback.ficaaiofeedbacktv.ui.player.PlayerLogger
 import com.ficaaiofeedback.ficaaiofeedbacktv.ui.player.PlaylistAwareDataSource
+import com.ficaaiofeedback.ficaaiofeedbacktv.ui.player.PlaylistRetryPolicy
 import com.ficaaiofeedback.ficaaiofeedbacktv.ui.player.SubtitleDataSource
 import com.ficaaiofeedback.ficaaiofeedbacktv.ui.player.TAG
 import com.ficaaiofeedback.ficaaiofeedbacktv.ui.player.addQualityButton
@@ -65,9 +70,9 @@ fun VideoPlayerScreen(
                 }
             }
         // Building a playlist runs a browser on the backend and can take well over a minute, so
-        // get_playlist waits up to 2 minutes. Everything else keeps 30s, so a stalled chunk is
+        // get_playlist waits up to 4 minutes. Everything else keeps 30s, so a stalled chunk is
         // retried quickly instead of freezing playback (ExoPlayer's default is 8s).
-        val playlistDataSourceFactory = apiDataSourceFactory(readTimeoutMs = 120_000)
+        val playlistDataSourceFactory = apiDataSourceFactory(readTimeoutMs = 240_000)
         val mediaDataSourceFactory = apiDataSourceFactory(readTimeoutMs = 30_000)
         val dataSourceFactory = DataSource.Factory {
             SubtitleDataSource(
@@ -89,14 +94,31 @@ fun VideoPlayerScreen(
             .build()
         ExoPlayer.Builder(context)
             .setLoadControl(loadControl)
-            .setMediaSourceFactory(DefaultMediaSourceFactory(dataSourceFactory))
+            .setMediaSourceFactory(
+                DefaultMediaSourceFactory(dataSourceFactory).setLoadErrorHandlingPolicy(PlaylistRetryPolicy())
+            )
             .build()
     }
+    // True from opening the episode (or switching servers) until it starts playing or fails. While
+    // it's true the controls are off, so only the loading spinner shows and nothing can be clicked.
+    var isLoading by remember { mutableStateOf(true) }
     DisposableEffect(Unit) {
-        val listener = PlayerLogger()
-        exoPlayer.addListener(listener)
+        val logger = PlayerLogger()
+        val loadingListener = object : Player.Listener {
+            override fun onPlaybackStateChanged(playbackState: Int) {
+                if (playbackState == Player.STATE_READY) isLoading = false
+            }
+
+            // Bring the controls back on failure, so the viewer can press play to retry.
+            override fun onPlayerError(error: PlaybackException) {
+                isLoading = false
+            }
+        }
+        exoPlayer.addListener(logger)
+        exoPlayer.addListener(loadingListener)
         onDispose {
-            exoPlayer.removeListener(listener)
+            exoPlayer.removeListener(logger)
+            exoPlayer.removeListener(loadingListener)
             exoPlayer.release()
         }
     }
@@ -124,6 +146,7 @@ fun VideoPlayerScreen(
         val subtitles = subtitleConfigurations ?: return@LaunchedEffect
         val playlistUrl = "${BuildConfig.API_BASE_URL}/series/seasons/${series.id}/episodes/${episode.number}/get_playlist?server=${server.id}"
         Log.v(TAG, playlistUrl)
+        isLoading = true
         // A new server can offer different qualities, so drop any fixed choice and go back to Auto.
         exoPlayer.trackSelectionParameters = exoPlayer.trackSelectionParameters.buildUpon()
             .clearOverridesOfType(C.TRACK_TYPE_VIDEO)
@@ -157,12 +180,23 @@ fun VideoPlayerScreen(
                     setShowPreviousButton(false)
                     setShowShuffleButton(false)
                     setShowSubtitleButton(true)
+                    // Spinner while the playlist loads and during stalls; media3 hides it by default.
+                    setShowBuffering(PlayerView.SHOW_BUFFERING_ALWAYS)
+                    // Shown over the player when playback stops with an error (e.g. get_playlist failing after its retry).
+                    setErrorMessageProvider(
+                        ErrorMessageProvider<PlaybackException> {
+                            Pair.create(0, "Não foi possível carregar o episódio. Tente novamente.")
+                        }
+                    )
                     addQualityButton(exoPlayer)
                     addServerButton(current = { server }, onSelect = { server = it })
                     resizeMode = AspectRatioFrameLayout.RESIZE_MODE_ZOOM
                 }
             },
-            update = { playerView -> playerView.requestFocus() },
+            update = { playerView ->
+                playerView.useController = !isLoading
+                playerView.requestFocus()
+            },
             modifier = Modifier.fillMaxSize(),
         )
     }
