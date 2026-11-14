@@ -39,6 +39,7 @@ import com.ficaaiofeedback.ficaaiofeedbacktv.data.SubtitleRepository
 import com.ficaaiofeedback.ficaaiofeedbacktv.model.Episode
 import com.ficaaiofeedback.ficaaiofeedbacktv.model.PlaybackServer
 import com.ficaaiofeedback.ficaaiofeedbacktv.model.Series
+import com.ficaaiofeedback.ficaaiofeedbacktv.ui.player.LenientH264RenderersFactory
 import com.ficaaiofeedback.ficaaiofeedbacktv.ui.player.PlayerLogger
 import com.ficaaiofeedback.ficaaiofeedbacktv.ui.player.PlaylistAwareDataSource
 import com.ficaaiofeedback.ficaaiofeedbacktv.ui.player.PlaylistRetryPolicy
@@ -93,6 +94,7 @@ fun VideoPlayerScreen(
             )
             .build()
         ExoPlayer.Builder(context)
+            .setRenderersFactory(LenientH264RenderersFactory(context))
             .setLoadControl(loadControl)
             .setMediaSourceFactory(
                 DefaultMediaSourceFactory(dataSourceFactory).setLoadErrorHandlingPolicy(PlaylistRetryPolicy())
